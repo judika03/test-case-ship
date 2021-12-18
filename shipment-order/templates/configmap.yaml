@@ -1,0 +1,41 @@
+{{- if .Values.configmap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "chart.fullname" . }}-configmap
+  labels:
+    app: {{ .Values.appName }}
+data:
+  {{ .Values.configmap.config.file_name_app }}: |-
+    {{- range $key, $value := .Values.configmap.config }}
+    {{- if not ( or (eq $key "file_name_app") (eq $key "configPath")) }}
+    {{- if eq ($value | typeOf) "float64" }}
+    {{- if contains "e+" (printf "%s" $value) }}
+    {{ $key }} = {{ int $value }}
+    {{- else }}
+    {{ $key }} = {{ $value }}
+    {{- end }}
+    {{- else }}
+    {{ $key }} = {{ $value }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+
+    {{- if .Values.configmap.environments }}
+    {{- range $key, $value := .Values.configmap.environments }}
+
+    [{{ $key }}]
+    {{- range $envKey, $envVal := $value }}
+    {{- if eq ($envVal | typeOf) "float64" }}
+    {{- if contains "e+" (printf "%s" $envVal) }}
+    {{ $envKey }} = {{ int $envVal }}
+    {{- else }}
+    {{ $envKey }} = {{ $envVal }}
+    {{- end }}
+    {{- else }}
+    {{ $envKey }} = {{ $envVal }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+{{- end }}

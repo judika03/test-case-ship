@@ -1,0 +1,102 @@
+# application name
+appName: shipment-rate
+
+# deployment setup
+deployments:
+  - runmode: default
+    replicaCount: 1
+    serviceType: ClusterIP
+    services:
+    - protocolName: http
+      port: 8080
+      targetPort: 8080
+
+# Setup your another deployment runmode like this example
+# #######################################################
+# - runmode: cron
+#   replicaCount: 1
+#   arg: "--cron" 
+# - runmode: consumer
+#   replicaCount: 1
+#   arg: "--consumer" 
+# - runmode: grpc
+#   replicaCount: 1
+#   arg: "--grpc"
+#   serviceType: ClusterIP
+#   services:
+#   - protocolName: grpc
+#     port: 9111
+#     targetPort: 9111
+
+# image configuration
+image:
+  repository: registry.test.com/sre-test/auth-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+
+
+# networking configuration virtual service or ingress resource
+  
+ingress:
+  enabled: false
+  # change this to your runmode name that use ingress
+  # default value runmode: default
+  runmode: default
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /public
+    nginx.ingress.kubernetes.io/service-upstream: true
+
+virtualService:
+  enabled: true
+  runmode: default
+  targetPort: 8080
+  path: api/auth-service
+  hosts:
+    - name: shipper.id
+      secretname: test-id-tls
+      countrycode: id
+      tls:
+        enabled: true
+  
+configmap:
+  enabled: true
+  config:
+    # Setting for app.conf
+    # ---------------------
+    file_name_app: config.env
+    configPath: /config
+
+    # APP Configuration
+    appname: shipment-rate
+    httpport: 8080
+
+    # DB Configuration
+    mysqluser: "db user"
+    mysqlpass: "db pass"
+    mysqlhost: "db ip"
+    mysqldb: "db name"
+
+    # Others Configuration
+    secret: "xxxx"
+    campaignpagesize: 5
+    max_csv_file_size: 2097152
+
+    # Connection Configuration
+    max_idle_conn: 10
+    max_open_conn: 50
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
